@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="UTF-8"/>
+    <title>文件夹选择</title>
+    <link rel="stylesheet" href="css/cs-select.css">
+    <link rel="stylesheet" href="css/cs-skin-underline.css">
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        .folder {
+            margin: 15px 16px;
+            display: inline-block;
+            width: 60px;
+        }
+
+        .folder > .icon {
+            width: 39px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .folder > .folderName {
+            width: 100%;
+            word-break: keep-all; /* 不换行 */
+            white-space: nowrap; /* 不换行 */
+            overflow: hidden; /* 内容超出宽度时隐藏超出部分的内容 */
+            text-overflow: ellipsis; /* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用。*/
+        }
+
+        .folder:hover {
+            cursor: pointer;
+        }
+
+        #driverPicker {
+            display: inline-block;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#folderDiv">
+    打开文件管理器
+</button>
+<div class="modal fade" id="folderDiv" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title badge badge-secondary" id="exampleModalLabel">请选择磁盘</h5>
+                <span>双击进入目录，单击选择目录</span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="folderDisplayDiv" class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <input id="showPath" class="form-control" placeholder="选中的文件夹会在这里显示" type="text"/>
+                <br/>
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="新建文件夹">
+                    <span class="input-group-btn"><input type="button" class="btn btn-secondary" value="创建"/></span>
+                </div>
+                <br/>
+                <div id="driverPicker" class="dropdown">
+                    请选择磁盘:
+                    <button type="button" class="btn btn-secondary dropdown-toggle" id="dropdown-drivers"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">C:
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="dropdown-driver" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                    </ul>
+                </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/classie.js"></script>
+<script src="js/selectFx.js"></script>
+<script src="js/DriversObject.js"></script>
+<script>
+    var driver = new DriversObject();
+    window.onload = function () {
+        var driverPicker = document.getElementById("dropdown-driver");
+        var drivers = driver.getDriver().split(",");
+        loadDrivers(driverPicker, drivers);
+        loadFolders(drivers[0]);
+    }
+
+    var loadDrivers = function (picker, drivers) {
+        for (var i = 0; i < drivers.length - 1; i++) {
+            var li = $("<li role='presentation'><a role='menuitem' tabindex='-1' href='#' onclick='changeFolderAndDriver(this);'>" + drivers[i] + "</a></li>");
+            $(picker).append(li);
+        }
+    }
+
+    var changeFolderAndDriver = function (picker) {
+        var driverInfo = $(picker).text();
+        var dropdown = $("#dropdown-drivers");
+        dropdown.text(driverInfo);
+        dropdown.append('<span class="caret"></span>');
+        loadFolders(driverInfo);
+        $("#showPath").val("");
+    }
+
+    var loadFolders = function (parentPath) {
+        var folders = driver.enterFolder(parentPath).split(",");
+        var folderDisplay = $("#folderDisplayDiv");
+        folderDisplay.empty();
+        for (var i = 0; i < folders.length - 1; i++) {
+            var folder = '<div class="folder" path="' + folders[i] + '" onclick="showPath(this);" ondblclick="enterFolder(this);">'
+                    + '<div class="icon">'
+                    + '<i class="fa fa-folder fa-3x" aria-hidden="true"></i>'
+                    + '</div>'
+                    + '<div class="folderName">' + driver.getBaseName(folders[i]) + '</div>'
+                    + '</div>';
+            folderDisplay.append($(folder));
+        }
+    }
+
+    var enterFolder = function (path) {
+        //清空当前界面，展示新界面
+        var fallPath = $(path).attr("path");
+        loadFolders(fallPath);
+    }
+
+    var showPath = function (path) {
+        var fallPath = $(path).attr("path");
+        $("#showPath").val(fallPath);
+    }
+</script>
+</body>
+</html>
